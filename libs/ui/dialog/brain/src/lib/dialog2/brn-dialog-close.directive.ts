@@ -1,0 +1,23 @@
+import { NumberInput, coerceNumberProperty } from '@angular/cdk/coercion';
+import { Directive, HostListener, Input, inject } from '@angular/core';
+import { BrnDialogRef } from './brn-dialog-ref';
+
+@Directive({
+	selector: 'button[brnDialogClose]',
+	standalone: true,
+})
+export class BrnDialogCloseDirective {
+	private readonly _brnDialogRef = inject(BrnDialogRef);
+
+	private _delay: number | undefined;
+
+	@Input()
+	set delay(value: NumberInput) {
+		this._delay = coerceNumberProperty(value);
+	}
+
+	@HostListener('click')
+	public close() {
+		this._brnDialogRef.close(this._delay);
+	}
+}
