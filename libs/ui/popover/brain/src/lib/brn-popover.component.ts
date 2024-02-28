@@ -9,7 +9,7 @@ import {
 	untracked,
 	ViewEncapsulation,
 } from '@angular/core';
-import { BrnDialogComponent, provideBrnDialog } from '@spartan-ng/ui-dialog-brain';
+import { BrnDialogComponent } from '@spartan-ng/ui-dialog-brain';
 
 export type BrnPopoverAlign = 'start' | 'center' | 'end';
 @Component({
@@ -19,7 +19,6 @@ export type BrnPopoverAlign = 'start' | 'center' | 'end';
 		<ng-content />
 	`,
 	providers: [
-		provideBrnDialog(),
 		{
 			provide: BrnDialogComponent,
 			useExisting: forwardRef(() => BrnPopoverComponent),

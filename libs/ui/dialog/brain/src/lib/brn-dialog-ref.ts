@@ -1,9 +1,16 @@
 import { DialogRef } from '@angular/cdk/dialog';
-import { Signal } from '@angular/core';
+import { Signal, WritableSignal } from '@angular/core';
+import { Subject } from 'rxjs';
+import { BrnDialogOptions } from './brn-dialog-options';
 import { BrnDialogState } from './brn-dialog-state';
 import { cssClassesToArray } from './brn-dialog.service';
 
 export class BrnDialogRef {
+	private readonly _closing$ = new Subject<void>();
+	public readonly closing$ = this._closing$.asObservable();
+
+	public readonly closed$ = this._cdkDialogRef.closed;
+
 	private _previousTimeout: ReturnType<typeof setTimeout> | undefined;
 
 	public get open() {
@@ -12,12 +19,17 @@ export class BrnDialogRef {
 
 	constructor(
 		private readonly _cdkDialogRef: DialogRef,
+		private readonly _open: WritableSignal<boolean>,
 		public readonly state: Signal<BrnDialogState>,
 		public readonly dialogId: number,
+		private readonly _options?: BrnDialogOptions,
 	) {}
 
-	public close(result: any, delay: number = 0) {
-		if (!this.open) return;
+	public close(result: any, delay: number = this._options?.closeDelay ?? 0) {
+		if (!this.open || this._options?.disableClose) return;
+
+		this._closing$.next();
+		this._open.set(false);
 
 		if (this._previousTimeout) {
 			clearTimeout(this._previousTimeout);

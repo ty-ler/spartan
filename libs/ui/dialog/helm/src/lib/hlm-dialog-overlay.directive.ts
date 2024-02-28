@@ -22,6 +22,8 @@ export class HlmDialogOverlayDirective {
 	}
 
 	constructor() {
-		effect(() => this._classSettable?.setClassToCustomElement(this._computedClass()));
+		effect(() => {
+			this._classSettable?.setClassToCustomElement(this._computedClass());
+		});
 	}
 }

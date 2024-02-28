@@ -7,7 +7,6 @@ import { BrnPopoverComponent } from './brn-popover.component';
 	standalone: true,
 	host: {
 		'[id]': '_id()',
-		'(click)': 'open()',
 		'aria-haspopup': 'dialog',
 		'[attr.aria-expanded]': "state() === 'open' ? 'true': 'false'",
 		'[attr.data-state]': 'state()',

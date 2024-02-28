@@ -11,20 +11,23 @@ import {
 	ChangeDetectionStrategy,
 	Component,
 	ElementRef,
+	EventEmitter,
 	Input,
 	Output,
 	TemplateRef,
 	ViewContainerRef,
 	ViewEncapsulation,
 	booleanAttribute,
+	computed,
 	inject,
 	numberAttribute,
+	signal,
 } from '@angular/core';
-import { BrnDialogOptions, BrnDialogService, provideBrnDialog } from './brn-dialog.service';
-
-let dialogSequence = 0;
-
-export type BrnDialogState = 'open' | 'closed';
+import { take } from 'rxjs';
+import { BrnDialogOptions } from './brn-dialog-options';
+import { BrnDialogRef } from './brn-dialog-ref';
+import { BrnDialogState } from './brn-dialog-state';
+import { BrnDialogService } from './brn-dialog.service';
 
 @Component({
 	selector: 'brn-dialog',
@@ -32,7 +35,6 @@ export type BrnDialogState = 'open' | 'closed';
 	template: `
 		<ng-content />
 	`,
-	providers: [provideBrnDialog()],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	encapsulation: ViewEncapsulation.None,
 	exportAs: 'brnDialog',
@@ -40,16 +42,12 @@ export type BrnDialogState = 'open' | 'closed';
 export class BrnDialogComponent {
 	private readonly _dialogService = inject(BrnDialogService);
 	private readonly _vcr = inject(ViewContainerRef);
-	private _contentTemplate: TemplateRef<unknown> | undefined;
 	public readonly positionBuilder = inject(OverlayPositionBuilder);
 	public readonly ssos = inject(ScrollStrategyOptions);
-	public readonly state = this._dialogService.state;
-	public readonly dialogId = dialogSequence++;
 
 	private _context = {};
-	protected _options: BrnDialogOptions = {
+	protected _options: Partial<BrnDialogOptions> = {
 		role: 'dialog',
-		id: 'brn-dialog-' + this.dialogId,
 		attachPositions: [],
 		attachTo: null,
 		autoFocus: 'first-tabbable',
@@ -62,17 +60,20 @@ export class BrnDialogComponent {
 		restoreFocus: true,
 		scrollStrategy: null,
 		disableClose: false,
-		ariaDescribedBy: 'brn-dialog-description-' + this.dialogId,
-		ariaLabelledBy: 'brn-dialog-title-' + this.dialogId,
 		ariaLabel: undefined,
 		ariaModal: true,
 	};
 
-	@Output()
-	public readonly closed = this._dialogService.closed;
+	private _contentTemplate: TemplateRef<unknown> | undefined;
+	private _dialogRef = signal<BrnDialogRef | undefined>(undefined);
+
+	public readonly state = computed(() => this._dialogRef()?.state() ?? 'closed');
 
 	@Output()
-	public readonly stateChanged = this._dialogService.stateChange;
+	public readonly closed = new EventEmitter();
+
+	@Output()
+	public readonly stateChanged = new EventEmitter();
 
 	// eslint-disable-next-line @angular-eslint/no-input-rename
 	@Input('state')
@@ -173,54 +174,73 @@ export class BrnDialogComponent {
 		this.setAriaModal(isModal);
 	}
 
-	open<DialogContext>() {
-		if (!this._contentTemplate) return;
-		this._dialogService.open<DialogContext>(
-			this._vcr,
+	public open<DialogContext>() {
+		if (!this._contentTemplate || this._dialogRef()) return;
+
+		const dialogRef = this._dialogService.open<DialogContext>(
 			this._contentTemplate,
+			this._vcr,
 			this._context as DialogContext,
 			this._options,
 		);
+
+		if (dialogRef) {
+			this._dialogRef.set(dialogRef);
+
+			dialogRef.closed$.pipe(take(1)).subscribe(() => this._dialogRef.set(undefined));
+		}
 	}
 
-	close(delay?: number) {
-		this._dialogService.close(delay ?? this._options.closeDelay);
+	public close(result: any, delay?: number) {
+		this._dialogRef()?.close(result, delay ?? this._options.closeDelay);
 	}
 
-	registerTemplate(tpl: TemplateRef<unknown>) {
-		this._contentTemplate = tpl;
+	public registerTemplate(template: TemplateRef<unknown>) {
+		this._contentTemplate = template;
 	}
 
-	setOverlayClass(overlayClass: string | null | undefined) {
+	public setOverlayClass(overlayClass: string | null | undefined) {
 		this._options['backdropClass'] = overlayClass ?? '';
 	}
 
-	setPanelClass(panelClass: string | null | undefined) {
+	public setPanelClass(panelClass: string | null | undefined) {
 		this._options['panelClass'] = panelClass ?? '';
 	}
 
-	setContext(context: unknown) {
+	public setContext(context: unknown) {
 		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 		// @ts-expect-error
 		this._context = { ...this._context, ...context };
 	}
 
-	setAriaDescribedBy(ariaDescribedBy: string | null | undefined) {
+	public setAriaDescribedBy(ariaDescribedBy: string | null | undefined) {
 		this._options = { ...this._options, ariaDescribedBy };
-		this._dialogService.setAriaDescribedBy(ariaDescribedBy);
+
+		const dialogRef = this._dialogRef();
+		if (dialogRef) {
+			dialogRef.setAriaDescribedBy(ariaDescribedBy);
+		}
 	}
 
-	setAriaLabelledBy(ariaLabelledBy: string | null | undefined) {
+	public setAriaLabelledBy(ariaLabelledBy: string | null | undefined) {
 		this._options = { ...this._options, ariaLabelledBy };
-		this._dialogService.setAriaLabelledBy(ariaLabelledBy);
+
+		const dialogRef = this._dialogRef();
+		if (dialogRef) {
+			dialogRef.setAriaLabelledBy(ariaLabelledBy);
+		}
 	}
 
-	setAriaLabel(ariaLabel: string | null | undefined) {
+	public setAriaLabel(ariaLabel: string | null | undefined) {
 		this._options = { ...this._options, ariaLabel };
-		this._dialogService.setAriaLabel(ariaLabel);
+
+		const dialogRef = this._dialogRef();
+		if (dialogRef) {
+			dialogRef.setAriaLabel(ariaLabel);
+		}
 	}
 
-	setAriaModal(ariaModal: boolean) {
+	public setAriaModal(ariaModal: boolean) {
 		this._options = { ...this._options, ariaModal };
 	}
 }
