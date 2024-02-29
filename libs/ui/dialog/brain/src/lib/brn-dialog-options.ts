@@ -18,6 +18,7 @@ export type BrnDialogOptions = {
 	restoreFocus: boolean | string | ElementRef;
 	closeDelay: number;
 	closeOnOutsidePointerEvents: boolean;
+	closeOnBackdropClick: boolean;
 	attachTo: FlexibleConnectedPositionStrategyOrigin | null | undefined;
 	attachPositions: ConnectedPosition[];
 	autoFocus: AutoFocusTarget | string;

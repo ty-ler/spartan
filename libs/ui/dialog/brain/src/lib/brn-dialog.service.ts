@@ -98,9 +98,6 @@ export class BrnDialogService {
 			ariaLabel: options?.ariaLabel,
 			ariaModal: options?.ariaModal,
 			providers: (cdkDialogRef) => {
-				const overlay = cdkDialogRef.overlayRef.overlayElement;
-				const backdrop = cdkDialogRef.overlayRef.backdropElement;
-
 				brnDialogRef = new BrnDialogRef(cdkDialogRef, open, state, dialogId, options as BrnDialogOptions);
 
 				runInInjectionContext(this._injector, () => {
@@ -135,8 +132,17 @@ export class BrnDialogService {
 			},
 		});
 
+		const overlay = cdkDialogRef.overlayRef.overlayElement;
+		const backdrop = cdkDialogRef.overlayRef.backdropElement;
+
 		if (options?.closeOnOutsidePointerEvents) {
 			cdkDialogRef.outsidePointerEvents.pipe(takeUntil(destroyed$)).subscribe(() => {
+				brnDialogRef.close(undefined, options?.closeDelay);
+			});
+		}
+
+		if (options?.closeOnBackdropClick) {
+			cdkDialogRef.backdropClick.pipe(takeUntil(destroyed$)).subscribe((e) => {
 				brnDialogRef.close(undefined, options?.closeDelay);
 			});
 		}
@@ -153,6 +159,7 @@ export class BrnDialogService {
 		}
 
 		cdkDialogRef.closed.pipe(takeUntil(destroyed$)).subscribe(() => {
+			effectRef?.destroy();
 			destroyed$.next();
 		});
 

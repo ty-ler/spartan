@@ -4,6 +4,7 @@ import { BrnDialogOptions, BrnDialogService, cssClassesToArray } from '@spartan-
 import { HlmDialogContentComponent } from './hlm-dialog-content.component';
 
 export type HlmDialogOptions<DialogContext = any> = BrnDialogOptions & {
+	contentClass?: string;
 	context?: DialogContext;
 };
 
@@ -13,14 +14,15 @@ export type HlmDialogOptions<DialogContext = any> = BrnDialogOptions & {
 export class HlmDialogService {
 	private readonly _brnDialogService = inject(BrnDialogService);
 
-	public open(content: ComponentType<unknown> | TemplateRef<unknown>, options: Partial<HlmDialogOptions>) {
+	public open(component: ComponentType<unknown> | TemplateRef<unknown>, options: Partial<HlmDialogOptions>) {
 		options = {
 			role: 'dialog',
 			attachPositions: [],
 			attachTo: null,
 			autoFocus: 'first-tabbable',
 			closeDelay: 100,
-			closeOnOutsidePointerEvents: true,
+			closeOnBackdropClick: true,
+			closeOnOutsidePointerEvents: false,
 			hasBackdrop: true,
 			panelClass: '',
 			positionStrategy: null,
@@ -33,7 +35,7 @@ export class HlmDialogService {
 			backdropClass: cssClassesToArray(
 				`bg-background/80 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 ${options.backdropClass ?? ''}`,
 			),
-			context: { ...options?.context, $content: content },
+			context: { ...options?.context, $component: component, $dynamicComponentClass: options?.contentClass },
 		};
 
 		return this._brnDialogService.open(HlmDialogContentComponent, undefined, options.context, options);

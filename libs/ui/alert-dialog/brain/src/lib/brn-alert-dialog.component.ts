@@ -21,6 +21,7 @@ export class BrnAlertDialogComponent extends BrnDialogComponent {
 	constructor() {
 		super();
 		this._options.role = 'alertdialog';
+		this._options.closeOnBackdropClick = false;
 		this._options.closeOnOutsidePointerEvents = false;
 	}
 }

@@ -17,8 +17,8 @@ import { HlmDialogCloseDirective } from './hlm-dialog-close.directive';
 		'[attr.data-state]': 'state()',
 	},
 	template: `
-		@if (content) {
-			<ng-container [ngComponentOutlet]="content"></ng-container>
+		@if (component) {
+			<ng-container [ngComponentOutlet]="component"></ng-container>
 		} @else {
 			<ng-content />
 		}
@@ -39,13 +39,15 @@ export class HlmDialogContentComponent {
 
 	public readonly state = computed(() => this._statusProvider?.state() ?? this._dialogRef?.state() ?? 'closed');
 
-	public readonly content = this._dialogContext?.['$content'];
+	public readonly component = this._dialogContext?.['$component'];
+	private readonly _dynamicComponentClass = this._dialogContext?.['$dynamicComponentClass'];
 
 	private readonly _userClass = input<ClassValue>('', { alias: 'class' });
 	protected readonly _computedClass = computed(() =>
 		hlm(
 			'border-border grid w-full max-w-lg relative gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-top-[2%]  data-[state=open]:slide-in-from-top-[2%] sm:rounded-lg md:w-full',
 			this._userClass(),
+			this._dynamicComponentClass,
 		),
 	);
 }

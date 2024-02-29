@@ -58,7 +58,8 @@ export class BrnDialogComponent {
 		autoFocus: 'first-tabbable',
 		backdropClass: '',
 		closeDelay: 0,
-		closeOnOutsidePointerEvents: true,
+		closeOnBackdropClick: true,
+		closeOnOutsidePointerEvents: false,
 		hasBackdrop: true,
 		panelClass: '',
 		positionStrategy: null,
@@ -126,6 +127,11 @@ export class BrnDialogComponent {
 	@Input({ transform: booleanAttribute })
 	set closeOnOutsidePointerEvents(closeOnOutsidePointerEvents: boolean) {
 		this._options['closeOnOutsidePointerEvents'] = closeOnOutsidePointerEvents;
+	}
+
+	@Input({ transform: booleanAttribute })
+	set closeOnBackdropClick(closeOnBackdropClick: boolean) {
+		this._options['closeOnBackdropClick'] = closeOnBackdropClick;
 	}
 
 	@Input()
