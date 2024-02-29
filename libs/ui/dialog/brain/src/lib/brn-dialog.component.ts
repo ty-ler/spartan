@@ -28,7 +28,7 @@ import {
 	signal,
 } from '@angular/core';
 import { take } from 'rxjs';
-import { BrnDialogOptions } from './brn-dialog-options';
+import { BrnDialogOptions, DEFAULT_BRN_DIALOG_OPTIONS } from './brn-dialog-options';
 import { BrnDialogRef } from './brn-dialog-ref';
 import { BrnDialogState } from './brn-dialog-state';
 import { BrnDialogService } from './brn-dialog.service';
@@ -52,22 +52,7 @@ export class BrnDialogComponent {
 
 	private _context = {};
 	protected _options: Partial<BrnDialogOptions> = {
-		role: 'dialog',
-		attachPositions: [],
-		attachTo: null,
-		autoFocus: 'first-tabbable',
-		backdropClass: '',
-		closeDelay: 0,
-		closeOnBackdropClick: true,
-		closeOnOutsidePointerEvents: false,
-		hasBackdrop: true,
-		panelClass: '',
-		positionStrategy: null,
-		restoreFocus: true,
-		scrollStrategy: null,
-		disableClose: false,
-		ariaLabel: undefined,
-		ariaModal: true,
+		...DEFAULT_BRN_DIALOG_OPTIONS,
 	};
 
 	private _contentTemplate: TemplateRef<unknown> | undefined;
@@ -220,10 +205,20 @@ export class BrnDialogComponent {
 
 	public setOverlayClass(overlayClass: string | null | undefined) {
 		this._options['backdropClass'] = overlayClass ?? '';
+
+		const dialogRef = this._dialogRef();
+		if (dialogRef) {
+			dialogRef.setOverlayClass(overlayClass);
+		}
 	}
 
 	public setPanelClass(panelClass: string | null | undefined) {
 		this._options['panelClass'] = panelClass ?? '';
+
+		const dialogRef = this._dialogRef();
+		if (dialogRef) {
+			dialogRef.setPanelClass(panelClass);
+		}
 	}
 
 	public setContext(context: unknown) {

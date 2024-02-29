@@ -29,3 +29,22 @@ export type BrnDialogOptions = {
 	ariaModal: boolean;
 	providers?: StaticProvider[] | (() => StaticProvider[]);
 };
+
+export const DEFAULT_BRN_DIALOG_OPTIONS: Readonly<Partial<BrnDialogOptions>> = {
+	role: 'dialog',
+	attachPositions: [],
+	attachTo: null,
+	autoFocus: 'first-tabbable',
+	backdropClass: '',
+	closeDelay: 0,
+	closeOnBackdropClick: true,
+	closeOnOutsidePointerEvents: false,
+	hasBackdrop: true,
+	panelClass: '',
+	positionStrategy: null,
+	restoreFocus: true,
+	scrollStrategy: null,
+	disableClose: false,
+	ariaLabel: undefined,
+	ariaModal: true,
+};

@@ -1,7 +1,13 @@
 import { ComponentType } from '@angular/cdk/portal';
 import { inject, Injectable, TemplateRef } from '@angular/core';
-import { BrnDialogOptions, BrnDialogService, cssClassesToArray } from '@spartan-ng/ui-dialog-brain';
+import {
+	BrnDialogOptions,
+	BrnDialogService,
+	cssClassesToArray,
+	DEFAULT_BRN_DIALOG_OPTIONS,
+} from '@spartan-ng/ui-dialog-brain';
 import { HlmDialogContentComponent } from './hlm-dialog-content.component';
+import { hlmDialogOverlayClass } from './hlm-dialog-overlay.directive';
 
 export type HlmDialogOptions<DialogContext = any> = BrnDialogOptions & {
 	contentClass?: string;
@@ -16,25 +22,10 @@ export class HlmDialogService {
 
 	public open(component: ComponentType<unknown> | TemplateRef<unknown>, options: Partial<HlmDialogOptions>) {
 		options = {
-			role: 'dialog',
-			attachPositions: [],
-			attachTo: null,
-			autoFocus: 'first-tabbable',
+			...DEFAULT_BRN_DIALOG_OPTIONS,
 			closeDelay: 100,
-			closeOnBackdropClick: true,
-			closeOnOutsidePointerEvents: false,
-			hasBackdrop: true,
-			panelClass: '',
-			positionStrategy: null,
-			restoreFocus: true,
-			scrollStrategy: null,
-			disableClose: false,
-			ariaLabel: undefined,
-			ariaModal: true,
 			...options,
-			backdropClass: cssClassesToArray(
-				`bg-background/80 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 ${options.backdropClass ?? ''}`,
-			),
+			backdropClass: cssClassesToArray(`${hlmDialogOverlayClass} ${options.backdropClass ?? ''}`),
 			context: { ...options?.context, $component: component, $dynamicComponentClass: options?.contentClass },
 		};
 
