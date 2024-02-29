@@ -10,8 +10,10 @@ import {
 import {
 	ChangeDetectionStrategy,
 	Component,
+	EffectRef,
 	ElementRef,
 	EventEmitter,
+	Injector,
 	Input,
 	Output,
 	TemplateRef,
@@ -19,8 +21,10 @@ import {
 	ViewEncapsulation,
 	booleanAttribute,
 	computed,
+	effect,
 	inject,
 	numberAttribute,
+	runInInjectionContext,
 	signal,
 } from '@angular/core';
 import { take } from 'rxjs';
@@ -44,6 +48,7 @@ export class BrnDialogComponent {
 	private readonly _vcr = inject(ViewContainerRef);
 	public readonly positionBuilder = inject(OverlayPositionBuilder);
 	public readonly ssos = inject(ScrollStrategyOptions);
+	private readonly _injector = inject(Injector);
 
 	private _context = {};
 	protected _options: Partial<BrnDialogOptions> = {
@@ -66,14 +71,15 @@ export class BrnDialogComponent {
 
 	private _contentTemplate: TemplateRef<unknown> | undefined;
 	private _dialogRef = signal<BrnDialogRef | undefined>(undefined);
+	private _dialogStateEffectRef?: EffectRef;
 
 	public readonly state = computed(() => this._dialogRef()?.state() ?? 'closed');
 
 	@Output()
-	public readonly closed = new EventEmitter();
+	public readonly closed = new EventEmitter<any>();
 
 	@Output()
-	public readonly stateChanged = new EventEmitter();
+	public readonly stateChanged = new EventEmitter<BrnDialogState>();
 
 	// eslint-disable-next-line @angular-eslint/no-input-rename
 	@Input('state')
@@ -177,6 +183,8 @@ export class BrnDialogComponent {
 	public open<DialogContext>() {
 		if (!this._contentTemplate || this._dialogRef()) return;
 
+		this._dialogStateEffectRef?.destroy();
+
 		const dialogRef = this._dialogService.open<DialogContext>(
 			this._contentTemplate,
 			this._vcr,
@@ -184,11 +192,16 @@ export class BrnDialogComponent {
 			this._options,
 		);
 
-		if (dialogRef) {
-			this._dialogRef.set(dialogRef);
+		this._dialogRef.set(dialogRef);
 
-			dialogRef.closed$.pipe(take(1)).subscribe(() => this._dialogRef.set(undefined));
-		}
+		runInInjectionContext(this._injector, () => {
+			this._dialogStateEffectRef = effect(() => this.stateChanged.emit(dialogRef.state()));
+		});
+
+		dialogRef.closed$.pipe(take(1)).subscribe((result) => {
+			this._dialogRef.set(undefined);
+			this.closed.emit(result);
+		});
 	}
 
 	public close(result: any, delay?: number) {

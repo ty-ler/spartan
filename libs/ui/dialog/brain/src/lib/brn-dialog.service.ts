@@ -1,20 +1,21 @@
-import { Dialog } from '@angular/cdk/dialog';
+import { Dialog, DIALOG_DATA } from '@angular/cdk/dialog';
 import { ComponentType, OverlayPositionBuilder, ScrollStrategyOptions } from '@angular/cdk/overlay';
 import {
+	computed,
+	effect,
 	EffectRef,
+	inject,
 	Injectable,
+	InjectOptions,
 	Injector,
 	RendererFactory2,
+	runInInjectionContext,
+	signal,
 	StaticProvider,
 	TemplateRef,
 	ViewContainerRef,
-	computed,
-	effect,
-	inject,
-	runInInjectionContext,
-	signal,
 } from '@angular/core';
-import { Subject, filter, takeUntil } from 'rxjs';
+import { filter, Subject, takeUntil } from 'rxjs';
 import { BrnDialogOptions } from './brn-dialog-options';
 import { BrnDialogRef } from './brn-dialog-ref';
 import { BrnDialogState } from './brn-dialog-state';
@@ -30,6 +31,10 @@ export const cssClassesToArray = (classes: string | string[] | undefined | null,
 		return splitClasses;
 	}
 	return classes ?? [];
+};
+
+export const injectDialogContext = <DialogContext = any>(options: InjectOptions = {}) => {
+	return inject(DIALOG_DATA, options) as DialogContext;
 };
 
 @Injectable({ providedIn: 'root' })
@@ -48,7 +53,7 @@ export class BrnDialogService {
 		options?: Partial<BrnDialogOptions>,
 	) {
 		if (options?.id && this._cdkDialog.getDialogById(options.id)) {
-			return;
+			throw new Error(`Dialog with ID: ${options.id} already exists`);
 		}
 
 		const positionStrategy =

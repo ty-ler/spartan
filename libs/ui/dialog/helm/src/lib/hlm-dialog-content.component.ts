@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, ViewEncapsulation, computed, input, signal } from '@angular/core';
+import { NgComponentOutlet } from '@angular/common';
+import { ChangeDetectionStrategy, Component, ViewEncapsulation, computed, inject, input } from '@angular/core';
 import { lucideX } from '@ng-icons/lucide';
 import { hlm, injectExposesStateProvider } from '@spartan-ng/ui-core';
-import { BrnDialogCloseDirective } from '@spartan-ng/ui-dialog-brain';
+import { BrnDialogCloseDirective, BrnDialogRef, injectDialogContext } from '@spartan-ng/ui-dialog-brain';
 import { HlmIconComponent, provideIcons } from '@spartan-ng/ui-icon-helm';
 import { ClassValue } from 'clsx';
 import { HlmDialogCloseDirective } from './hlm-dialog-close.directive';
@@ -9,14 +10,19 @@ import { HlmDialogCloseDirective } from './hlm-dialog-close.directive';
 @Component({
 	selector: 'hlm-dialog-content',
 	standalone: true,
-	imports: [BrnDialogCloseDirective, HlmDialogCloseDirective, HlmIconComponent],
+	imports: [NgComponentOutlet, BrnDialogCloseDirective, HlmDialogCloseDirective, HlmIconComponent],
 	providers: [provideIcons({ lucideX })],
 	host: {
 		'[class]': '_computedClass()',
 		'[attr.data-state]': 'state()',
 	},
 	template: `
-		<ng-content />
+		@if (content) {
+			<ng-container [ngComponentOutlet]="content"></ng-container>
+		} @else {
+			<ng-content />
+		}
+
 		<button brnDialogClose hlm>
 			<span class="sr-only">Close</span>
 			<hlm-icon class="flex h-4 w-4" size="100%" name="lucideX" />
@@ -26,8 +32,14 @@ import { HlmDialogCloseDirective } from './hlm-dialog-close.directive';
 	encapsulation: ViewEncapsulation.None,
 })
 export class HlmDialogContentComponent {
-	private readonly _statusProvider = injectExposesStateProvider({ host: true });
-	public readonly state = this._statusProvider.state ?? signal('closed').asReadonly();
+	private readonly _statusProvider = injectExposesStateProvider({ host: true, optional: true });
+
+	private readonly _dialogRef = inject(BrnDialogRef);
+	private readonly _dialogContext = injectDialogContext({ optional: true });
+
+	public readonly state = computed(() => this._statusProvider?.state() ?? this._dialogRef?.state() ?? 'closed');
+
+	public readonly content = this._dialogContext?.['$content'];
 
 	private readonly _userClass = input<ClassValue>('', { alias: 'class' });
 	protected readonly _computedClass = computed(() =>
